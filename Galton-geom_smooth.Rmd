@@ -1,0 +1,65 @@
+---
+title: "Use Care When Using geom_smooth()"
+output: html_notebook
+---
+
+# Motivation
+
+There is a small mistake in the linear regression lecture.
+
+# Plotting the Galton dataset
+
+```{r plotGalton, message=FALSE, warning=FALSE}
+library(dplyr)
+library(UsingR)
+data(galton)
+freqData <- as.data.frame(table(galton$child, galton$parent))
+names(freqData) <- c("child", "parent", "freq")
+freqData$child <- as.numeric(as.character(freqData$child))
+freqData$parent <- as.numeric(as.character(freqData$parent))
+g <- ggplot(filter(freqData, freq > 0), aes(x = parent, y = child))
+g <- g  + scale_size(range = c(2, 20), guide = "none" )
+g <- g + geom_point(colour="grey50", aes(size = freq+20, show_guide = FALSE))
+g <- g + geom_point(aes(colour=freq, size = freq))
+g <- g + scale_colour_gradient(low = "lightblue", high="white")
+g <- g + geom_smooth(method = "lm", formula = y ~ x)
+g
+```
+
+```{r}
+fit_galton <- lm(child ~ parent, galton)
+summary(fit_galton)
+```
+
+```{r}
+fit_freqData <- lm(child ~ parent, filter(freqData, freq > 0))
+summary(fit_freqData)
+```
+
+
+```{r correctModel}
+g2 <- g + geom_smooth(data = galton, method = "lm",
+                     color = "red", fill = "salmon")
+g2
+```
+
+# Plotting an Existing Model
+
+```{r}
+freqData2 <- cbind(freqData, predict(fit_galton, newdata = freqData, interval = "confidence") )
+
+g3 <- ggplot(filter(freqData2, freq > 0), aes(x = parent, y = child))
+g3 <- g3  + scale_size(range = c(2, 20), guide = "none" )
+g3 <- g3 + geom_point(colour="grey50", aes(size = freq+20, show_guide = FALSE))
+g3 <- g3 + geom_point(aes(colour=freq, size = freq))
+g3 <- g3 + scale_colour_gradient(low = "lightblue", high="white")
+g3 <- g3 + geom_smooth(method = "lm", formula = y ~ x)
+g3
+```
+
+
+# References
+
+[How to plot an existing model w/ ggplot](https://stackoverflow.com/questions/44865508/using-ggplot2-to-plot-an-already-existing-linear-model) </br>
+[Community Class Notes](http://datasciencespecialization.github.io/regmod/) </br>
+[Previous post on the discussion forum](https://www.coursera.org/learn/regression-models/discussions/weeks/1/threads/amdfK7XcEeW2dA51rBQ9Ew)
